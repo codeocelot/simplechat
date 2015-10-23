@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Socket.IO chat</title>
+		<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font: 13px Helvetica, Arial; }
+p{color:white}
+form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+form input.textbox { border: 0; padding: 10px; width: 80%; margin-right: .25%; }
+form input.nickname { border: 0; padding: 10px; width: 10%; margin-right: .25%; }
+form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+#messages { list-style-type: none; margin: 0; padding: 0; }
+#messages li { padding: 5px 10px; }
+#messages li:nth-child(odd) { background: #eee; }
+		</style>
+	</head>
+	<body>
+		<ul id="users"></ul>
+		<ul id="messages"></ul>
+		<form action="">
+		<p id="writing"></p>
+		<p id="myID"></p>
+			<input class="textbox" id="m" autocomplete="off" />
+			<input class="nickname" id="nickname" autocomplete="off" />
+			<button>Send</button>
+		</form>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+		<script>
+var socket = io();
+var usersOnline = [];
+
+socket.on('connect',function(){
+	console.log(socket.id);
+	$("#myID").html("My id is: " + socket.id);
+	//socket.emit('connect',usersOnline);
+});
+
+$('form').submit(function(){
+	var text = $('#m').val();
+	var name = $("#nickname").val() || 'anon';
+	if(!text){
+		alert('I need a message!');	
+		return false;
+	}
+
+	socket.emit('chat message', {name:name,text:text})
+	$("#messages").append($("<li>").text("Me: " + $("#m").val()));
+	$('#m').val('');
+	return false;
+});
+socket.on('chat message', function(msg){
+	$('#messages').append($('<li>').text(msg.name + ": " + msg.text));
+});
+
+document.getElementById("m").addEventListener("keypress",function(){
+	console.log('changed!');
+	var name = $("#nickname").val() || 'anon';
+	socket.emit('writing',{name:name});
+})
+
+socket.on('writing',function(msg){
+	msg.name = msg.name || 'anon'
+	$("#writing").text(msg.name+ ' is writing');
+	setInterval(function(){
+		$("#writing").text("");
+	},3*1000);
+});
+
+socket.on('users',function(users){
+	usersOnline = users;
+	console.log('user connected',users);
+	var userElement = document.getElementById("users");
+	$("#users").html('');
+	usersOnline.forEach(function(el){
+		console.log(usersOnline.length);
+		$("#users").append('<li>'+el+"</li>");
+	})
+});
+		</script>
+	</body>
+</html>
