@@ -34,14 +34,18 @@ var usersOnline = [];
 socket.on('connect',function(){
 	console.log(socket.id);
 	$("#myID").html("My id is: " + socket.id);
-	//socket.emit('connect',usersOnline);
+	socket.emit('connect_new',socket.id);
+	// socket.on('users',function(users){
+	// 	console.log('inside connect update users',users);
+	// 	updateUsers(users);
+	// })
 });
 
 $('form').submit(function(){
 	var text = $('#m').val();
 	var name = $("#nickname").val() || 'anon';
 	if(!text){
-		alert('I need a message!');	
+		alert('I need a message!');
 		return false;
 	}
 
@@ -68,16 +72,22 @@ socket.on('writing',function(msg){
 	},3*1000);
 });
 
-socket.on('users',function(users){
+socket.on('users',function(users,disconID){
+	console.log('in users',users)
+	updateUsers(users);
+	if(disconID) $("#messages").append("<li>").text(disconID + " left the chat");
+});
+
+function updateUsers(users){
 	usersOnline = users;
-	console.log('user connected',users);
+	console.log('users connected',users);
 	var userElement = document.getElementById("users");
 	$("#users").html('');
 	usersOnline.forEach(function(el){
 		console.log(usersOnline.length);
 		$("#users").append('<li>'+el+"</li>");
 	})
-});
+}
 		</script>
 	</body>
 </html>

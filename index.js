@@ -9,14 +9,14 @@ app.get('/', function(req, res){
 var usersOnline  = [];
 
 io.on('connection', function(socket){
-		usersOnline.push(socket.id);
-		//socket.broadcast.emit('a ');
 		console.log(socket.id + " has joined");
-		socket.emit('users',usersOnline);
-		console.log("CONNECT: " + usersOnline.length + " currently");
-		socket.on('connect',function(){
-			console.log('i have connected');
-			socket.emit('users',usersOnline);	
+		socket.emit('users',Object.keys(io.engine.clients))
+
+		console.log("Connected users: ", Object.keys(io.engine.clients));
+
+		socket.on('connect_new',function(){
+			console.log('new connection')
+			socket.broadcast.emit('users',Object.keys(io.engine.clients))
 		})
 
 		socket.on('chat message',function(msg){
@@ -26,14 +26,8 @@ io.on('connection', function(socket){
 			socket.broadcast.emit('writing',name);
 		})
 		socket.on('disconnect',function(){
-			var i = usersOnline.indexOf(socket.id);
-			console.log(socket.id + "has been disconnected");
-			if(usersOnline.indexOf(socket.id) >-1){
-				console.log('user found,currently contain ', usersOnline);
-				usersOnline.splice(i,1);
-			console.log("DISCONNECT: " + usersOnline.length + " remaining");
-				socket.emit('users',usersOnline);
-			}
+			console.log('disconnect occured, active users are', Object.keys(io.engine.clients));
+			socket.broadcast.emit('users',Object.keys(io.engine.clients),socket.id)
 		})
 });
 
